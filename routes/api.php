@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BukuController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\FilmController;
 use App\Models\Film;
 use Illuminate\Http\Request;
@@ -12,3 +13,4 @@ Route::get('/user', function (Request $request) {
 
 Route::apiResource('films', FilmController::class);
 Route::apiResource('bukus', BukuController::class);
+Route::apiResource('employees', EmployeeController::class);

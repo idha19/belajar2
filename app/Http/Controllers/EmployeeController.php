@@ -36,7 +36,7 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         // validasi request
-        $validation = Validation::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:employees,email',
             'phone' => 'required|string|max:20|unique:employees,phone',
@@ -47,15 +47,50 @@ class EmployeeController extends Controller
             'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
         ]);
 
-        if 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        if ($request->hasFile('photo')) {
+            $path = $request->file('photo')->store('employee-photos', 'public');
+            $data['photo'] = $path;
+        }
+
+        $employee = Employee::create($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Karyawan berhasil ditambahkan',
+            'data'    => $employee
+        ], 201);
+        
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Employee $employee)
+    public function show($id)
     {
-        //
+        $employee = Employee::find($id);
+
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Karyawan tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Detail Karyawan',
+            '$data' => $employee
+        ], 200);
     }
 
     /**
@@ -69,16 +104,71 @@ class EmployeeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Employee $employee)
+    public function update(Request $request, $id)
     {
-        //
+        $employee = Employee::find($id);
+
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Karyawan tidak ditemukan'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name'       => 'sometimes|required|string|max:255',
+            'email'      => 'sometimes|required|email|unique:employees,email,' . $employee->id,
+            'phone'      => 'sometimes|required|string|max:20|unique:employees,phone,' . $employee->id,
+            'position'   => 'sometimes|required|string|max:100',
+            'department' => 'sometimes|required|string|max:100',
+            'salary'     => 'sometimes|required|numeric|min:0',
+            'hire_date'  => 'sometimes|required|date',
+            'photo'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        if ($request->hasFile('photo')) {
+            $path = $request->file('photo')->store('employee-photos', 'public');
+            $data['photo'] = $path;
+        }
+
+        $employee->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Karyawan berhasil diperbarui',
+            'data'    => $employee
+        ], 200);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Employee $employee)
+    public function destroy($id)
     {
-        //
+        $employee = Employee::find($id);
+
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Karyawan tidak ditemukan'
+            ], 404);
+        }
+
+        $employee->delete();
+
+        return response()->json([
+            'success'=> true,
+            'message' => 'Karyawan berhasil dihapus'
+        ], 200);
     }
 }
