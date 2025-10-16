@@ -9,6 +9,7 @@ use App\Trait\HasResponse; //ini memanggil trait
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+ 
 
 class BukuController extends Controller
 {
